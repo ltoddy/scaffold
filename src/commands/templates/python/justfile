@@ -1,0 +1,6 @@
+lint:
+    @uvx ruff check # lint check
+    @uvx ty check # type check
+
+fmt:
+    @uvx ruff format

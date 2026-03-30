@@ -32,19 +32,7 @@ pub fn execute(args: InitArgs) {
     }
 
     match args.language {
-        Language::Rust => {
-            println!(
-                "{} {}",
-                "Creating Rust project configuration files...".blue(),
-                format!("in {}", args.path.display()).dimmed()
-            );
-            create_rust_files(&args.path);
-            println!(
-                "{} {}",
-                "Rust project initialized successfully!".green().bold(),
-                format!("in {}", args.path.display()).dimmed()
-            );
-        },
+        Language::Rust => create_rust_files(&args.path),
         Language::Python => {
             println!(
                 "{} {}",
@@ -56,6 +44,8 @@ pub fn execute(args: InitArgs) {
 }
 
 fn create_rust_files(root: &Path) {
+    println!("{} {}", "Creating Rust project configuration files...".blue(), format!("in {}", root.display()).dimmed());
+
     let mut all_files_created = true;
 
     let files = vec![
@@ -85,6 +75,12 @@ fn create_rust_files(root: &Path) {
         eprintln!(
             "{}",
             "Warning: Some configuration files could not be created, but initialization continues...".yellow()
+        );
+    } else {
+        println!(
+            "{} {}",
+            "Rust project initialized successfully!".green().bold(),
+            format!("in {}", root.display()).dimmed()
         );
     }
 }

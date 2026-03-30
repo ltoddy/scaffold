@@ -10,8 +10,8 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        cli::Commands::Init { language } => {
-            init::execute(&language);
+        cli::Commands::Init(args) => {
+            init::execute(args);
         },
     }
 }

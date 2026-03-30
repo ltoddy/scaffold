@@ -1,18 +1,57 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use clap::Parser;
 use colored::*;
 
 use crate::cli::Language;
 
-pub fn execute(language: &Language) {
-    println!("{}", format!("Initializing project in {}...", language).cyan());
+#[derive(Parser, Debug)]
+pub struct InitArgs {
+    /// Programming language (rust or python)
+    language: Language,
+
+    /// Project directory path (optional, defaults to current directory)
+    #[arg(default_value = ".")]
+    path: PathBuf,
+}
+
+pub fn execute(args: InitArgs) {
+    let InitArgs { language, path } = args;
+
+    println!(
+        "{} {}",
+        format!("Initializing project in {}...", language).cyan(),
+        format!("({})", path.display()).dimmed()
+    );
+
+    // 确保目录存在
+    if !path.exists()
+        && let Err(e) = fs::create_dir_all(&path)
+    {
+        eprintln!("{} {}", "Failed to create directory:".red(), e);
+        return;
+    }
+
+    // 切换到指定目录
+    if let Err(e) = std::env::set_current_dir(&path) {
+        eprintln!("{} {}", "Failed to change to directory:".red(), e);
+        return;
+    }
 
     match language {
         Language::Rust => {
-            println!("{}", "Creating Rust project configuration files...".blue());
+            println!(
+                "{} {}",
+                "Creating Rust project configuration files...".blue(),
+                format!("in {}", path.display()).dimmed()
+            );
             create_rust_files();
-            println!("{}", "Rust project initialized successfully!".green().bold());
+            println!(
+                "{} {}",
+                "Rust project initialized successfully!".green().bold(),
+                format!("in {}", path.display()).dimmed()
+            );
             println!(
                 "{}",
                 "You can now use 'just build', 'just run', 'just test', 'just fmt', 'just lint' commands"
@@ -20,7 +59,11 @@ pub fn execute(language: &Language) {
             );
         },
         Language::Python => {
-            println!("{}", "Python initialization not yet implemented".yellow());
+            println!(
+                "{} {}",
+                "Python initialization not yet implemented".yellow(),
+                format!("in {}", path.display()).dimmed()
+            );
         },
     }
 }
@@ -33,13 +76,17 @@ fn create_rust_files() {
     if !justfile_path.exists() {
         let justfile_content = include_str!("templates/rust/justfile");
         if let Err(e) = fs::write("justfile", justfile_content) {
-            eprintln!("{}", format!("Failed to create justfile: {}", e).red());
+            eprintln!("{} {}", "Failed to create justfile:".red(), e);
             all_files_created = false;
         } else {
-            println!("{}", "  ✓ Created justfile".green());
+            println!("{} {}", "  ✓ Created justfile".green(), format!("({})", justfile_path.display()).dimmed());
         }
     } else {
-        println!("{}", "  ℹ justfile already exists, skipping...".dimmed());
+        println!(
+            "{} {}",
+            "  ℹ justfile already exists, skipping...".dimmed(),
+            format!("({})", justfile_path.display()).dimmed()
+        );
     }
 
     // Create rust-toolchain.toml
@@ -47,13 +94,21 @@ fn create_rust_files() {
     if !rust_toolchain_path.exists() {
         let rust_toolchain_content = include_str!("templates/rust/rust-toolchain.toml");
         if let Err(e) = fs::write("rust-toolchain.toml", rust_toolchain_content) {
-            eprintln!("{}", format!("Failed to create rust-toolchain.toml: {}", e).red());
+            eprintln!("{} {}", "Failed to create rust-toolchain.toml:".red(), e);
             all_files_created = false;
         } else {
-            println!("{}", "  ✓ Created rust-toolchain.toml".green());
+            println!(
+                "{} {}",
+                "  ✓ Created rust-toolchain.toml".green(),
+                format!("({})", rust_toolchain_path.display()).dimmed()
+            );
         }
     } else {
-        println!("{}", "  ℹ rust-toolchain.toml already exists, skipping...".dimmed());
+        println!(
+            "{} {}",
+            "  ℹ rust-toolchain.toml already exists, skipping...".dimmed(),
+            format!("({})", rust_toolchain_path.display()).dimmed()
+        );
     }
 
     // Create rustfmt.toml
@@ -61,13 +116,17 @@ fn create_rust_files() {
     if !rustfmt_path.exists() {
         let rustfmt_content = include_str!("templates/rust/rustfmt.toml");
         if let Err(e) = fs::write("rustfmt.toml", rustfmt_content) {
-            eprintln!("{}", format!("Failed to create rustfmt.toml: {}", e).red());
+            eprintln!("{} {}", "Failed to create rustfmt.toml:".red(), e);
             all_files_created = false;
         } else {
-            println!("{}", "  ✓ Created rustfmt.toml".green());
+            println!("{} {}", "  ✓ Created rustfmt.toml".green(), format!("({})", rustfmt_path.display()).dimmed());
         }
     } else {
-        println!("{}", "  ℹ rustfmt.toml already exists, skipping...".dimmed());
+        println!(
+            "{} {}",
+            "  ℹ rustfmt.toml already exists, skipping...".dimmed(),
+            format!("({})", rustfmt_path.display()).dimmed()
+        );
     }
 
     if !all_files_created {
@@ -78,5 +137,9 @@ fn create_rust_files() {
     }
 
     // Run just fmt and just lint commands
-    println!("{}", "Running just fmt and just lint...".blue());
+    println!(
+        "{} {}",
+        "Running just fmt and just lint...".blue(),
+        format!("in {}", std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")).display()).dimmed()
+    );
 }

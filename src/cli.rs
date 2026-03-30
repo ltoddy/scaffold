@@ -2,6 +2,8 @@ use std::fmt;
 
 use clap::{Parser, Subcommand};
 
+use crate::commands::init::InitArgs;
+
 #[derive(Parser, Debug)]
 #[command(name = "scaffold")]
 #[command(about = "A scaffolding tool for different programming languages")]
@@ -13,10 +15,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Initialize a new project
-    Init {
-        /// Programming language (rust or python)
-        language: Language,
-    },
+    Init(InitArgs),
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]

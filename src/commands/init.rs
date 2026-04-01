@@ -36,13 +36,12 @@ pub fn execute(args: InitArgs) {
     }
 
     match args.language {
-        Language::Rust => init_rust_files(&args.path),
-        Language::Python => init_python_files(&args.path),
+        Language::Rust => init_rust_files(&args.path, &theme),
+        Language::Python => init_python_files(&args.path, &theme),
     }
 }
 
-fn init_rust_files(root: &Path) {
-    let theme = theme::detect();
+fn init_rust_files(root: &Path, theme: &Theme) {
     println!(
         "{} {}",
         "Creating Rust project configuration files...".color(theme.blue()),
@@ -111,9 +110,7 @@ fn init_rust_files(root: &Path) {
     }
 }
 
-fn init_python_files(root: &Path) {
-    let theme = theme::detect();
-
+fn init_python_files(root: &Path, theme: &Theme) {
     println!(
         "{} {}",
         "Creating Python project configuration files...".color(theme.blue()),
@@ -128,12 +125,12 @@ fn init_python_files(root: &Path) {
             format!("({})", pyproject_path.display()).dimmed()
         );
     } else {
-        run_uv_init(root, &theme);
+        run_uv_init(root, theme);
     }
 
-    run_uv_add_dev(root, &theme);
+    run_uv_add_dev(root, theme);
 
-    create_python_justfile(root, &theme);
+    create_python_justfile(root, theme);
 
     println!(
         "{} {}",
@@ -145,7 +142,7 @@ fn init_python_files(root: &Path) {
 fn run_uv_init(root: &Path, theme: &Theme) {
     println!("{} {}", "Running uv init...".color(theme.cyan()), format!("in {}", root.display()).dimmed());
 
-    shell(&format!("uv init --directory {}", root.to_str().unwrap_or(".")), root);
+    shell("uv init", root);
 }
 
 fn run_uv_add_dev(root: &Path, theme: &Theme) {

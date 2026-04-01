@@ -11,6 +11,7 @@ use crate::theme::{self, Theme};
 #[derive(Parser, Debug)]
 pub struct InitArgs {
     /// Programming language (rust or python)
+    #[arg(default_value_t = Language::default())]
     language: Language,
 
     /// Project directory path (optional, defaults to current directory)

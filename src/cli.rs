@@ -18,8 +18,9 @@ pub enum Commands {
     Init(InitArgs),
 }
 
-#[derive(clap::ValueEnum, Clone, Debug)]
+#[derive(clap::ValueEnum, Clone, Debug, Default)]
 pub enum Language {
+    #[default]
     Rust,
     Python,
 }
@@ -27,8 +28,8 @@ pub enum Language {
 impl fmt::Display for Language {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Language::Rust => write!(f, "Rust"),
-            Language::Python => write!(f, "Python"),
+            Language::Rust => write!(f, "rust"),
+            Language::Python => write!(f, "python"),
         }
     }
 }

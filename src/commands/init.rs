@@ -1,11 +1,11 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use clap::Parser;
 use colored::*;
 
 use crate::cli::Language;
+use crate::shell::shell;
 use crate::theme::{self, Theme};
 
 #[derive(Parser, Debug)]
@@ -27,7 +27,6 @@ pub fn execute(args: InitArgs) {
         format!("({})", args.path.display()).dimmed()
     );
 
-    // 确保目录存在
     if !args.path.exists()
         && let Err(e) = fs::create_dir_all(&args.path)
     {
@@ -36,18 +35,31 @@ pub fn execute(args: InitArgs) {
     }
 
     match args.language {
-        Language::Rust => create_rust_files(&args.path),
-        Language::Python => create_python_files(&args.path),
+        Language::Rust => init_rust_files(&args.path),
+        Language::Python => init_python_files(&args.path),
     }
 }
 
-fn create_rust_files(root: &Path) {
+fn init_rust_files(root: &Path) {
     let theme = theme::detect();
     println!(
         "{} {}",
         "Creating Rust project configuration files...".color(theme.blue()),
         format!("in {}", root.display()).dimmed()
     );
+
+    let cargo_toml_path = root.join("Cargo.toml");
+    if !cargo_toml_path.exists() {
+        println!("{} {}", "Running cargo init...".color(theme.cyan()), format!("in {}", root.display()).dimmed());
+
+        shell("cargo init", root);
+    } else {
+        println!(
+            "{} {}",
+            "  ℹ Cargo.toml already exists, skipping cargo init...".dimmed(),
+            format!("({})", cargo_toml_path.display()).dimmed()
+        );
+    }
 
     let mut all_files_created = true;
 
@@ -98,7 +110,7 @@ fn create_rust_files(root: &Path) {
     }
 }
 
-fn create_python_files(root: &Path) {
+fn init_python_files(root: &Path) {
     let theme = theme::detect();
 
     println!(
@@ -107,7 +119,6 @@ fn create_python_files(root: &Path) {
         format!("in {}", root.display()).dimmed()
     );
 
-    // 检查 pyproject.toml 是否存在，如果存在则跳过 uv init
     let pyproject_path = root.join("pyproject.toml");
     if pyproject_path.exists() {
         println!(
@@ -116,18 +127,11 @@ fn create_python_files(root: &Path) {
             format!("({})", pyproject_path.display()).dimmed()
         );
     } else {
-        // 执行 uv init
-        let Some(_) = run_uv_init(root, &theme) else {
-            return;
-        };
+        run_uv_init(root, &theme);
     }
 
-    // 执行 uv add --dev ruff ty
-    let Some(_) = run_uv_add_dev(root, &theme) else {
-        return;
-    };
+    run_uv_add_dev(root, &theme);
 
-    // 创建 justfile
     create_python_justfile(root, &theme);
 
     println!(
@@ -137,37 +141,16 @@ fn create_python_files(root: &Path) {
     );
 }
 
-fn run_uv_init(root: &Path, theme: &Theme) -> Option<()> {
+fn run_uv_init(root: &Path, theme: &Theme) {
     println!("{} {}", "Running uv init...".color(theme.cyan()), format!("in {}", root.display()).dimmed());
 
-    let output = Command::new("uv").arg("init").arg("--directory").arg(root).current_dir(root).output().ok()?;
-
-    if output.status.success() {
-        println!("{}", "  ✓ uv init completed successfully".color(theme.green()));
-        Some(())
-    } else {
-        eprintln!("{} {}", "Failed to run uv init:".color(theme.red()), String::from_utf8_lossy(&output.stderr));
-        eprintln!("{}", "Make sure 'uv' is installed and available in PATH".color(theme.yellow()));
-        None
-    }
+    shell(&format!("uv init --directory {}", root.to_str().unwrap_or(".")), root);
 }
 
-fn run_uv_add_dev(root: &Path, theme: &Theme) -> Option<()> {
+fn run_uv_add_dev(root: &Path, theme: &Theme) {
     println!("{} {}", "Running uv add --dev ruff ty...".color(theme.cyan()), format!("in {}", root.display()).dimmed());
 
-    let output = Command::new("uv").args(["add", "--dev", "ruff", "ty"]).current_dir(root).output().ok()?;
-
-    if output.status.success() {
-        println!("{}", "  ✓ Added dev dependencies: ruff, ty".color(theme.green()));
-        Some(())
-    } else {
-        eprintln!(
-            "{} {}",
-            "Failed to add dev dependencies:".color(theme.red()),
-            String::from_utf8_lossy(&output.stderr)
-        );
-        None
-    }
+    shell("uv add --dev ruff ty", root);
 }
 
 fn create_python_justfile(root: &Path, theme: &Theme) {

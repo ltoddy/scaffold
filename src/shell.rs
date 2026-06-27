@@ -8,8 +8,12 @@ pub fn shell(cmd: &str, current_dir: &Path) {
         None => return,
     };
 
+    shell_with_args(program, &parts.collect::<Vec<_>>(), current_dir);
+}
+
+pub fn shell_with_args(program: &str, args: &[&str], current_dir: &Path) {
     let mut child = match Command::new(program)
-        .args(parts)
+        .args(args)
         .current_dir(current_dir)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
@@ -17,7 +21,7 @@ pub fn shell(cmd: &str, current_dir: &Path) {
     {
         Ok(child) => child,
         Err(e) => {
-            eprintln!("Failed to spawn command '{}': {}", cmd, e);
+            eprintln!("Failed to spawn command '{} {}': {}", program, args.join(" "), e);
             return;
         },
     };

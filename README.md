@@ -39,10 +39,16 @@ cargo install --path .
 
 ```bash
 scaffold init <LANGUAGE> [PATH]
+scaffold doctor
 ```
 
 - `<LANGUAGE>`: 必填，支持 `rust` 或 `python`。
 - `[PATH]`: 选填，项目目录路径，默认为当前目录 (`.`)。
+
+### 命令
+
+- `init` - 初始化新项目
+- `doctor` - 检查环境依赖是否已安装
 
 ### 示例
 

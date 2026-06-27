@@ -2,7 +2,7 @@ use std::fmt;
 
 use clap::{Parser, Subcommand};
 
-use crate::commands::init::InitArgs;
+use crate::commands::{doctor::DoctorArgs, init::InitArgs};
 
 #[derive(Parser, Debug)]
 #[command(name = "scaffold")]
@@ -16,6 +16,8 @@ pub struct Cli {
 pub enum Commands {
     /// Initialize a new project
     Init(InitArgs),
+    /// Check environment dependencies
+    Doctor(DoctorArgs),
 }
 
 #[derive(clap::ValueEnum, Clone, Debug, Default)]
